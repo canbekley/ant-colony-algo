@@ -1,6 +1,5 @@
-import numpy as np
-
 from models import Ant, Edge, Vertex, ConstructionGraph, ConstructionCycle
+from util import fake_random_selection
 
 
 def creat_vertices():
@@ -48,7 +47,7 @@ def test_ant_travels_through_all_edges():
     ant = Ant(vertices[0])
 
     # inject fake random choice function to get deterministic behavior for testing
-    ant.travel_all_edges_randomly(construction_graph, random_choice_func=lambda x: sorted(list(x))[0])
+    ant.travel_edges(construction_graph, decision_func=fake_random_selection)
 
     assert ant.traveled_edges == [Edge(vertices[0], vertices[1]),
                                   Edge(vertices[1], vertices[2]),
@@ -72,3 +71,18 @@ def test_pheromones_placed_with_correct_evaporation():
 
     construction_graph = next(cycle)  # 0.05 being evaporated, every edge should now have 0.95 pheromone
     assert all([edge.pheromone == 0.95 for edge in construction_graph.edges])
+
+
+def test_correct_edge_probabilities_applied():
+    vertices = [Vertex([1]), Vertex([2]), Vertex([3])]
+    construction_graph = ConstructionGraph(*vertices)
+    ant = Ant(Vertex([1]))
+
+    feasible_edges = ant._get_feasible_edges(construction_graph)
+    assert feasible_edges == {Edge(Vertex([1]), Vertex([2])), Edge(Vertex([1]), Vertex([3]))}
+
+    for edge in feasible_edges:
+        edge._pheromone = 1.
+    edge_probabilities = ant._get_edge_probabilities(feasible_edges)
+    assert edge_probabilities[Edge(Vertex([1]), Vertex([2]))] == 2/3
+    assert edge_probabilities[Edge(Vertex([1]), Vertex([3]))] == 1/3
