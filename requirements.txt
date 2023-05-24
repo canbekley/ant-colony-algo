@@ -1,3 +1,9 @@
 pytest
 pylint
 numpy
+plotly
+kaleido
+jupyter
+pandas
+black[jupyter]
+Pillow
